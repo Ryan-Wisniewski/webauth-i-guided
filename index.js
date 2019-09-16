@@ -2,8 +2,6 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 var bcrypt = require('bcryptjs')
-var salt = bcrypt.genSaltSync(10);
-var hash = bcrypt.hashSync("yeet", salt);
 
 const db = require('./database/dbConfig.js');
 const Users = require('./users/users-model.js');
@@ -19,9 +17,10 @@ server.get('/', (req, res) => {
 });
 
 server.post('/api/register', (req, res) => {
-  let user = req.body;
-
-  Users.add(user)
+  let { username, password} = req.body;
+  const hash = bcrypt.hashSync(password, 8)
+  
+  Users.add({ username, password: hash })
     .then(saved => {
       res.status(201).json(saved);
     })
@@ -32,6 +31,9 @@ server.post('/api/register', (req, res) => {
 
 server.post('/api/login', (req, res) => {
   let { username, password } = req.body;
+  let post = req.body.password
+  const hash = bcrypt.hashSync(password, 8)
+  bcrypt.compareSync(post, hash);
 
   Users.findBy({ username })
     .first()
@@ -57,7 +59,8 @@ server.get('/api/users', (req, res) => {
 
 server.get('/hash', (req, res) => {
   const name = req.query.name
-  bcrypt.compareSync("yeet", hash); 
+  // bcrypt.compareSync("yeet", hash); 
+  var hash = bcrypt.hashSync('bacon', 8);
   // const hash = 'yeet'
   res.send(`the hash for ${name} is ${hash}`)
 });
